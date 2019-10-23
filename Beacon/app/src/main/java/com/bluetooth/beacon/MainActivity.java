@@ -36,6 +36,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
@@ -211,5 +212,96 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             bluetoothMacAddress = bluetoothAdapter.getAddress();
         }
         return bluetoothMacAddress;
+    }
+
+
+    //计算模块
+    public Vector<beacon> differ(Vector<beacon> p0, Vector<beacon> p1){
+        Vector<beacon> differ_p = p0;
+        for(int i=1;i<differ_p.size();i++){
+            //与p1位置的所有beacond的rssi作差值。若某beacon在p1未出现，则认为其在p1的rssi为0
+            int index = p1.indexOf(differ_p.get(i));
+            if(index != -1){
+                differ_p.get(i).rssi = differ_p.get(i).rssi - p1.get(index).rssi;
+            }
+        }
+        //计算结束，返回differ-p
+        return differ_p;
+    }
+
+    //分类模块
+    public Vector<area> classify(Vector<beacon> p){
+        //以beacon1初始化一个区域r1
+        area r1 = new area();
+        r1.area_id = p.get(0).area_id;
+        r1.beacon_set.add(p.get(0));
+
+        //将r1加入区域集合R中
+        Vector<area> R = new Vector<area>();
+        R.add(r1);
+
+        //遍历p中剩余beacon
+        for(int i=1;i<p.size();i++){
+            //新建临时region，并加入R中
+            area temp_r = new area();
+            temp_r.area_id = p.get(i).area_id;
+            temp_r.beacon_set.add(p.get(i));
+            R.add(temp_r);
+
+            //判断临时region与加入之前的R是否重复
+            for(int j=0;j<R.size()-1;j++){
+                if(R.get(j).area_id == temp_r.area_id){
+                    //如果重复，则将临时region中的beacon加入到已有的region中，并从R中删去刚刚加入到临时region;
+                    //如果未重复，则保留刚刚加入的临时region
+                    R.get(j).beacon_set.add(p.get(i));
+                    R.remove(R.size());
+                }
+            }
+        }
+        //遍历完毕，输出分类结果R
+        return R;
+    }
+
+    //符号函数
+    public boolean sign (int num){
+        if(num>0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    //判定模块
+    public boolean determine(area r,Vector<beacon> differ_p1,Vector<beacon> differ_p2,Vector<beacon> differ_p3){
+        //若区域beacon小于3个，则认为不在该区域内
+        if(r.beacon_set.capacity()<3){
+            return false;
+        }
+
+        int size = r.beacon_set.size();
+        boolean[] X = new boolean[size];
+
+        //对于区域内每一个beacon
+        for(int i=0;i<size;i++){
+            //每个路径对应的差值
+            int index1 = differ_p1.indexOf(r.beacon_set.get(i));
+            int index2 = differ_p2.indexOf(r.beacon_set.get(i));
+            int index3 = differ_p3.indexOf(r.beacon_set.get(i));
+
+            //该beacon的判定量
+            X[i] = (sign(differ_p1.get(index1).rssi) ^ sign(differ_p2.get(index2).rssi))
+                    |  (sign(differ_p3.get(index3).rssi) ^ sign(differ_p2.get(index2).rssi));
+        }
+
+        //判定
+        boolean K = X[0];
+        for(int i=1;i<X.length;i++){
+            K = K & X[i];
+        }
+
+        if(K)
+            return true;
+        else
+            return false;
     }
 }
