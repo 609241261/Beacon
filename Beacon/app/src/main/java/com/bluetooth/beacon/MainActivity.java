@@ -52,10 +52,10 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     private BeaconManager beaconManager;
     List<Beacon> beaconList = new ArrayList<>();
 
-    Vector<my_beacon> t1;
-    Vector<my_beacon> t2;
-    Vector<my_beacon> t3;
-    Vector<my_beacon> t4;
+    Vector<my_beacon> t1 = new Vector<my_beacon>();
+    Vector<my_beacon> t2 = new Vector<my_beacon>();
+    Vector<my_beacon> t3 = new Vector<my_beacon>();
+    Vector<my_beacon> t4 = new Vector<my_beacon>();
 
 
     @Override
@@ -121,11 +121,14 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                 Vector<area> R = classify(t4);
 
                 //分别判断当前位置是否属于各个区域
-                Boolean[] A = new Boolean[R.capacity()];
-                for(int i=0;i<R.capacity();i++){
-                    A[i] = determine(R.get(i),differ_p1,differ_p2,differ_p3);
+                if(R.size() == 0){
+                    Boolean A_empty = false;
+                }else{
+                    Boolean[] A = new Boolean[R.capacity()];
+                    for(int i=0;i<R.capacity();i++){
+                        A[i] = determine(R.get(i),differ_p1,differ_p2,differ_p3);
+                    }
                 }
-
 
                 break;
         }
@@ -270,6 +273,12 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
     //分类模块
     public Vector<area> classify(Vector<my_beacon> p){
+
+        if(p.size() ==0){
+            Vector<area> R_empty = new Vector<area>();
+            return R_empty;
+        }
+
         //以beacon1初始化一个区域r1
         area r1 = new area();
         r1.area_id = p.get(0).area_id;
