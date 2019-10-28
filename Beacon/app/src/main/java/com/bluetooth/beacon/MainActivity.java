@@ -111,25 +111,6 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             case R.id.scan:
                 beaconManager.bind(this);
 
-
-                //计算差值
-                Vector<my_beacon> differ_p1 = differ(t4,t1);
-                Vector<my_beacon> differ_p2 = differ(t4,t2);
-                Vector<my_beacon> differ_p3 = differ(t4,t3);
-
-                //划分区域
-                Vector<area> R = classify(t4);
-
-                //分别判断当前位置是否属于各个区域
-                if(R.size() == 0){
-                    Boolean A_empty = false;
-                }else{
-                    Boolean[] A = new Boolean[R.capacity()];
-                    for(int i=0;i<R.capacity();i++){
-                        A[i] = determine(R.get(i),differ_p1,differ_p2,differ_p3);
-                    }
-                }
-
                 break;
         }
     }
@@ -144,16 +125,27 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         }
 
 
-        t1 = t2;
-        t2 = t3;
-        t3 = t4;
-        
 
         beaconManager.addRangeNotifier(this);
     }
 
     @Override
     public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+
+        t1 = (Vector<my_beacon>) t2.clone();       // 直接使用=不是值传递
+        t2 = (Vector<my_beacon>) t3.clone();
+        t3 = (Vector<my_beacon>) t4.clone();
+
+        t4.clear();
+
+        /*
+        if(! (t1.isEmpty() | t2.isEmpty() | t3.isEmpty()) ){
+            Log.d(TAG,"t1_beacon1_id:"+t1.get(0).beacon_id+"   t1_size:   " + t1.size()+
+                    "   t2_beacon1_id:"+t2.get(0).beacon_id+"   t2_size:   " + t2.size()+
+                    "   t3_beacon1_id:"+t3.get(0).beacon_id+"   t3_size:   " + t3.size());
+        }
+        */
+
         for (Beacon beacon: beacons) {
             if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
                 // This is a Eddystone-UID frame
@@ -170,23 +162,51 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
                 }
 
-                //将设备加入t1中
+                //将设备加入t4中
                 my_beacon temp = new my_beacon();
-                temp.beacon_id = beacon.getBluetoothName();
-                temp.area_id = beacon.getBluetoothName(); //区域id待定
+                temp.beacon_id = beacon.getId2().toHexString();
+                temp.area_id = beacon.getId2().toHexString(); //区域id待定
                 temp.rssi = beacon.getRssi();
 
                 t4.add(temp);
             }
         }
+
+        /*
         for (Beacon beacon:beaconList) {
+
             //将设备从列表数据中删除
             if(!beacons.contains(beacon)) {
                 beaconList.remove(beacon);
                 Log.d(TAG,"i delete a beacon.");
                 list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
             }
+
         }
+        */
+
+        //计算差值
+        Vector<my_beacon> differ_p1 = differ(t4,t1);
+        Vector<my_beacon> differ_p2 = differ(t4,t2);
+        Vector<my_beacon> differ_p3 = differ(t4,t3);
+
+        //划分区域
+        Vector<area> R = classify(t4);
+
+        //分别判断当前位置是否属于各个区域
+        if(R.size() == 0){
+            Boolean A_empty = false;
+            Log.d(TAG, "Can't distinguish" + A_empty);
+        }else{
+            Boolean[] A = new Boolean[R.size()];
+            for(int i=0;i<R.size();i++){
+                A[i] = determine(R.get(i),differ_p1,differ_p2,differ_p3);
+                Log.d(TAG, i + " is " + A[i]);
+            }
+        }
+
+
+
     }
 
     //已过时
@@ -274,7 +294,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     //分类模块
     public Vector<area> classify(Vector<my_beacon> p){
 
-        if(p.size() ==0){
+        if(p.isEmpty()){
             Vector<area> R_empty = new Vector<area>();
             return R_empty;
         }
@@ -282,6 +302,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         //以beacon1初始化一个区域r1
         area r1 = new area();
         r1.area_id = p.get(0).area_id;
+        r1.beacon_set = new Vector<my_beacon>();
         r1.beacon_set.add(p.get(0));
 
         //将r1加入区域集合R中
@@ -293,6 +314,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             //新建临时region，并加入R中
             area temp_r = new area();
             temp_r.area_id = p.get(i).area_id;
+            temp_r.beacon_set = new Vector<my_beacon>();
             temp_r.beacon_set.add(p.get(i));
             R.add(temp_r);
 
@@ -322,7 +344,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     //判定模块
     public boolean determine(area r,Vector<my_beacon> differ_p1,Vector<my_beacon> differ_p2,Vector<my_beacon> differ_p3){
         //若区域beacon小于3个，则认为不在该区域内
-        if(r.beacon_set.capacity()<3){
+        if(r.beacon_set.size()<3){
             return false;
         }
 
