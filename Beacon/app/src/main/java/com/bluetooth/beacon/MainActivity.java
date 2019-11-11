@@ -17,9 +17,12 @@ import org.altbeacon.beacon.Identifier;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.provider.Settings;
@@ -31,10 +34,12 @@ import android.view.View;
 import android.widget.Button;
 
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -57,10 +62,26 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     Vector<my_beacon> t3 = new Vector<my_beacon>();
     Vector<my_beacon> t4 = new Vector<my_beacon>();
 
+    public static final int DPM_ACTIVATION_REQUEST_CODE = 100;
+    private ComponentName adminComponent;
+    private DevicePolicyManager devicePolicyManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        adminComponent = new ComponentName(getPackageName(),getPackageName() + ".DeviceAdministrator");
+
+        if (!devicePolicyManager.isAdminActive(adminComponent)) {
+
+            Intent activateDeviceAdmin = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            activateDeviceAdmin.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent);
+            startActivityForResult(activateDeviceAdmin, DPM_ACTIVATION_REQUEST_CODE);
+
+        }
+
         setContentView(R.layout.activity_main);
         initView();
 
@@ -73,6 +94,10 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         String TelNum=getTelNumber(this);
 
         Log.d(TAG,"IMEI:"+IMEI+"   TelNum:"+TelNum+"    Mac:"+mac);
+
+        /*Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
+        devicePolicyManager.setCameraDisabled(adminComponent, true);
+        Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));*/
 
         beaconManager = BeaconManager.getInstanceForApplication(this.getApplicationContext());
 // Detect the main identifier (UID) frame:
@@ -96,6 +121,8 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         scan = (Button) findViewById(R.id.scan);
         list = (ListView) findViewById(R.id.list);
 
+
+
         scan.setOnClickListener(this);
     }
 
@@ -106,6 +133,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         {
             Toast.makeText(this, "系统检测到未开启位置权限,请开启", Toast.LENGTH_SHORT).show();
         }
+
 
         switch (v.getId()) {
             case R.id.scan:
@@ -147,34 +175,44 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         */
 
         for (Beacon beacon: beacons) {
-            if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
-                // This is a Eddystone-UID frame
-                Identifier namespaceId = beacon.getId1();
-                Identifier instanceId = beacon.getId2();
-                Log.d(TAG, "I see a beacon transmitting namespace id: "+namespaceId+
+            try {
+                if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
+                    // This is a Eddystone-UID frame
+                    Identifier namespaceId = beacon.getId1();
+                    Identifier instanceId = beacon.getId2();
+                    double rssi = beacon.getRssi();
+                /*Log.d(TAG, "I see a beacon transmitting namespace id: "+namespaceId+
                         " and instance id: "+instanceId+
-                        " approximately "+beacon.getDistance()+" meters away.");
-                //将设备加入列表数据中
-                if (!beaconList.contains(beacon)) {
-                    beaconList.add(beacon);
-                    list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
+                        " approximately "+beacon.getDistance()+" meters away.");*/
+                    Log.d(TAG, "namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
+                    //将设备加入列表数据中
+                    if (!beaconList.contains(beacon)) {
+                        beaconList.add(beacon);
+                        list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
 
+                        devicePolicyManager.setCameraDisabled(adminComponent, true);
+                        Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
 
+                    }
+
+                    //将设备加入t4中
+                    my_beacon temp = new my_beacon();
+                    temp.beacon_id = beacon.getId2().toHexString();
+                    temp.area_id = beacon.getId2().toHexString(); //区域id待定
+
+                    temp.rssi = beacon.getRssi();
+
+                    t4.add(temp);
                 }
 
-                //将设备加入t4中
-                my_beacon temp = new my_beacon();
-                temp.beacon_id = beacon.getId2().toHexString();
-                temp.area_id = beacon.getId2().toHexString(); //区域id待定
-                temp.rssi = beacon.getRssi();
-
-                t4.add(temp);
+            }catch (SecurityException securityException){
+                Log.i("Device Administrator", "Error occurred while disabling/enabling camera - " + securityException.getMessage());
             }
+
         }
 
-        /*
-        for (Beacon beacon:beaconList) {
 
+        /*for (Beacon beacon:beaconList) {
             //将设备从列表数据中删除
             if(!beacons.contains(beacon)) {
                 beaconList.remove(beacon);
@@ -182,8 +220,22 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                 list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
             }
 
+        }*/
+
+        Iterator<Beacon> iterator = beaconList.iterator();
+        while (iterator.hasNext()){
+            Beacon beacon = iterator.next();
+            if (!beacons.contains(beacon)){
+                iterator.remove();
+            }
+            list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
         }
-        */
+
+        if(beaconList.size() == 0){
+            devicePolicyManager.setCameraDisabled(adminComponent, false);
+            Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
+        }
+
 
         //计算差值
         Vector<my_beacon> differ_p1 = differ(t4,t1);
