@@ -9,7 +9,7 @@
         android:layout_height="50dp" />
 
     <TextView
-        android:id="@+id/bluetoothname"
+        android:id="@+id/instanceId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="5dp"
@@ -22,7 +22,7 @@
         android:id="@+id/NamespaceID"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/bluetoothname"
+        android:layout_below="@+id/instanceId"
         android:layout_marginLeft="5dp"
         android:layout_marginTop="5dp"
         android:layout_toRightOf="@id/bluetoothicon"
@@ -30,14 +30,25 @@
         android:textSize="15dp" />
 
     <TextView
-        android:id="@+id/instanceId"
+        android:id="@+id/RSSI"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/NamespaceID"
+        android:layout_below="@+id/NamespaceID"
         android:layout_marginLeft="5dp"
         android:layout_marginTop="5dp"
         android:layout_toRightOf="@id/bluetoothicon"
-        android:text="instanceId"
+        android:text="NamespaceID"
+        android:textSize="15dp" />
+
+    <TextView
+        android:id="@+id/Distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/RSSI"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_toRightOf="@id/bluetoothicon"
+        android:text="NamespaceID"
         android:textSize="15dp" />
 
 </RelativeLayout>

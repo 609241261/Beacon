@@ -51,23 +51,28 @@ public class MyAdapter extends BaseAdapter {
         if(view == null){
             //首先为view绑定布局
             view = mInflater.inflate(R.layout.devices_item , null);
-            viewHolder.name = (TextView) view.findViewById(R.id.bluetoothname);
+            //viewHolder.name = (TextView) view.findViewById(R.id.bluetoothname);
             viewHolder.NamespaceID = (TextView) view.findViewById(R.id.NamespaceID);
             viewHolder.instanceId = (TextView) view.findViewById(R.id.instanceId);
+            viewHolder.RSSI = (TextView) view.findViewById(R.id.RSSI);
+            viewHolder.Distance = (TextView) view.findViewById(R.id.Distance);
 
             view.setTag(viewHolder);
         }else{
             viewHolder = (ViewHolder) view.getTag();
         }
         Beacon beacon = mlist.get(i);
-        viewHolder.name.setText("BeaconName:"+beacon.getBluetoothName());
+        //viewHolder.name.setText("BeaconName:"+beacon.getBluetoothName());
         viewHolder.NamespaceID.setText("NamespaceID:"+beacon.getId1().toHexString());
         viewHolder.instanceId.setText("InstanceID:"+beacon.getId2().toHexString());
+        viewHolder.RSSI.setText("RSSI:"+beacon.getRssi()+ " dBm");
+        int distance = (int) beacon.getDistance();
+        viewHolder.Distance.setText("大致距离:"+distance+" m");
 
         return view;
     }
 
     class ViewHolder{
-        private TextView name , NamespaceID , instanceId;
+        private TextView name , NamespaceID , instanceId , RSSI , Distance ;
     }
 }
