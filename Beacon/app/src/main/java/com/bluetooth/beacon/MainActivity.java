@@ -49,7 +49,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     protected static final String TAG = "MonitoringActivity";
 
 
-    private Button scan;
+    private Button scan, second_page;
     private ListView list;
 
     BluetoothAdapter bluetoothAdapter;
@@ -117,6 +117,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
     private void initView() {
         scan = (Button) findViewById(R.id.scan);
+        second_page=(Button)findViewById(R.id.secend_page);
         list = (ListView) findViewById(R.id.list);
 
 
@@ -136,7 +137,11 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         switch (v.getId()) {
             case R.id.scan:
                 beaconManager.bind(this);
-
+                break;
+            case R.id.secend_page:
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this,SecondPage.class);
+                startActivity(intent);
                 break;
         }
     }

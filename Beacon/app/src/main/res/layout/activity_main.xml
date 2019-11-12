@@ -12,6 +12,12 @@
         android:layout_height="wrap_content"
         android:text="扫描设备"/>
 
+    <Button
+        android:id="@+id/secend_page"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="交互信息"
+        />
 
     <ListView
         android:id="@+id/list"
