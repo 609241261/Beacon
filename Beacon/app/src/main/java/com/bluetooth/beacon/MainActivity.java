@@ -123,6 +123,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
 
         scan.setOnClickListener(this);
+        second_page.setOnClickListener(this);
     }
 
     @Override
@@ -140,7 +141,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                 break;
             case R.id.secend_page:
                 Intent intent = new Intent();
-                intent.setClass(MainActivity.this,SecondPage.class);
+                intent.setClass(MainActivity.this,second_page.class);
                 startActivity(intent);
                 break;
         }

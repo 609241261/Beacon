@@ -1,5 +1,6 @@
 package com.bluetooth.beacon;
 
+
 import android.support.v7.app.AppCompatActivity;
 import android.util.*;
 import android.view.View;
@@ -24,7 +25,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class second_page extends AppCompatActivity implements View.OnClickListener {
 
     protected static final String TAG = "MonitoringActivity";
     private android.widget.TextView textView;
@@ -190,3 +191,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 }
+
