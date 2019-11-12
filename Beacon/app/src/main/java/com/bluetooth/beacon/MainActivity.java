@@ -71,16 +71,17 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //获取超级管理员权限
         devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         adminComponent = new ComponentName(getPackageName(),getPackageName() + ".DeviceAdministrator");
-
         if (!devicePolicyManager.isAdminActive(adminComponent)) {
-
             Intent activateDeviceAdmin = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
             activateDeviceAdmin.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent);
             startActivityForResult(activateDeviceAdmin, DPM_ACTIVATION_REQUEST_CODE);
 
         }
+
+
 
         setContentView(R.layout.activity_main);
         initView();
@@ -95,9 +96,6 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
         Log.d(TAG,"IMEI:"+IMEI+"   TelNum:"+TelNum+"    Mac:"+mac);
 
-        /*Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
-        devicePolicyManager.setCameraDisabled(adminComponent, true);
-        Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));*/
 
         beaconManager = BeaconManager.getInstanceForApplication(this.getApplicationContext());
 // Detect the main identifier (UID) frame:
@@ -166,14 +164,6 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
         t4.clear();
 
-        /*
-        if(! (t1.isEmpty() | t2.isEmpty() | t3.isEmpty()) ){
-            Log.d(TAG,"t1_beacon1_id:"+t1.get(0).beacon_id+"   t1_size:   " + t1.size()+
-                    "   t2_beacon1_id:"+t2.get(0).beacon_id+"   t2_size:   " + t2.size()+
-                    "   t3_beacon1_id:"+t3.get(0).beacon_id+"   t3_size:   " + t3.size());
-        }
-        */
-
         for (Beacon beacon: beacons) {
             try {
                 if (beacon.getServiceUuid() == 0xfeaa && beacon.getBeaconTypeCode() == 0x00) {
@@ -181,7 +171,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                     Identifier namespaceId = beacon.getId1();
                     Identifier instanceId = beacon.getId2();
                     double rssi = beacon.getRssi();
-                /*Log.d(TAG, "I see a beacon transmitting namespace id: "+namespaceId+
+                    /*Log.d(TAG, "I see a beacon transmitting namespace id: "+namespaceId+
                         " and instance id: "+instanceId+
                         " approximately "+beacon.getDistance()+" meters away.");*/
                     Log.d(TAG, "namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
@@ -190,6 +180,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                         beaconList.add(beacon);
                         list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
 
+                        //禁用摄像头
                         devicePolicyManager.setCameraDisabled(adminComponent, true);
                         Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
 
@@ -212,16 +203,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         }
 
 
-        /*for (Beacon beacon:beaconList) {
-            //将设备从列表数据中删除
-            if(!beacons.contains(beacon)) {
-                beaconList.remove(beacon);
-                Log.d(TAG,"i delete a beacon.");
-                list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
-            }
-
-        }*/
-
+        //将设备从列表数据中删除
         Iterator<Beacon> iterator = beaconList.iterator();
         while (iterator.hasNext()){
             Beacon beacon = iterator.next();
@@ -231,6 +213,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             list.setAdapter(new MyAdapter(MainActivity.this, beaconList));
         }
 
+        //若未检测到信标，则开启摄像头权限
         if(beaconList.size() == 0){
             devicePolicyManager.setCameraDisabled(adminComponent, false);
             Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
