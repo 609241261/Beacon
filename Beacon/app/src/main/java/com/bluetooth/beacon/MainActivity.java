@@ -35,6 +35,7 @@ import android.widget.Button;
 
 import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
     private Button scan;
     private ListView list;
+    private android.widget.TextView textView;
 
     BluetoothAdapter bluetoothAdapter;
 
@@ -119,6 +121,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         scan = (Button) findViewById(R.id.scan);
         list = (ListView) findViewById(R.id.list);
 
+        textView = (TextView) findViewById(R.id.response_data);
 
 
         scan.setOnClickListener(this);
@@ -175,6 +178,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                         " and instance id: "+instanceId+
                         " approximately "+beacon.getDistance()+" meters away.");*/
                     Log.d(TAG, "namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
+                    show("namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
                     //将设备加入列表数据中
                     if (!beaconList.contains(beacon)) {
                         beaconList.add(beacon);
@@ -182,14 +186,15 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
                         //禁用摄像头
                         devicePolicyManager.setCameraDisabled(adminComponent, true);
-                        Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
+                        //Log.d(TAG, String.valueOf(devicePolicyManager.getCameraDisabled(adminComponent)));
 
                     }
 
                     //将设备加入t4中
                     my_beacon temp = new my_beacon();
                     temp.beacon_id = beacon.getId2().toHexString();
-                    temp.area_id = beacon.getId2().toHexString(); //区域id待定
+                    //temp.area_id = beacon.getId2().toHexString(); //区域id待定
+                    temp.area_id = get_region_id(beacon.getId2().toHexString()); //区域id
 
                     temp.rssi = beacon.getRssi();
 
@@ -236,7 +241,8 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             Boolean[] A = new Boolean[R.size()];
             for(int i=0;i<R.size();i++){
                 A[i] = determine(R.get(i),differ_p1,differ_p2,differ_p3);
-                Log.d(TAG, i + " is " + A[i]);
+                //Log.d(TAG, i + " is " + A[i]);
+                show(i + " is " + A[i]);
             }
         }
 
@@ -311,18 +317,39 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         return bluetoothMacAddress;
     }
 
+    public static String get_region_id(String id) {
+        switch (id) {
+            case "0x000000010101":
+                return "area_A";
+            case "0x000000020101":
+                return  "area_A";
+            case "0x000000030101":
+                return "area_A";
+            case "0x000000040101":
+                return "area_A";
+        }
+        return "0";
+    }
 
     //计算模块
     public Vector<my_beacon> differ(Vector<my_beacon> p0, Vector<my_beacon> p1){
+
         Vector<my_beacon> differ_p = p0;
         for(int i=1;i<differ_p.size();i++){
             //与p1位置的所有beacond的rssi作差值。若某beacon在p1未出现，则认为其在p1的rssi为0
-            int index = p1.indexOf(differ_p.get(i));
-            if(index != -1){
+
+            //int index = p1.indexOf(differ_p.get(i));//!!!!!!!!!!!
+
+            int index = check(p1,differ_p.get(i));
+
+            //Log.d(TAG, i + String.valueOf(index));
+            if(index >= 0){
                 differ_p.get(i).rssi = differ_p.get(i).rssi - p1.get(index).rssi;
             }
         }
         //计算结束，返回differ-p
+
+
         return differ_p;
     }
 
@@ -359,7 +386,9 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                     //如果重复，则将临时region中的beacon加入到已有的region中，并从R中删去刚刚加入到临时region;
                     //如果未重复，则保留刚刚加入的临时region
                     R.get(j).beacon_set.add(p.get(i));
-                    R.remove(R.size());
+                    //R.remove(R.size());
+                    R.remove(temp_r);
+                    break;
                 }
             }
         }
@@ -396,6 +425,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             //该beacon的判定量
             X[i] = (sign(differ_p1.get(index1).rssi) ^ sign(differ_p2.get(index2).rssi))
                     |  (sign(differ_p3.get(index3).rssi) ^ sign(differ_p2.get(index2).rssi));
+            Log.d(TAG, i + " is " + sign(differ_p1.get(index1).rssi));
         }
 
         //判定
@@ -408,5 +438,30 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             return true;
         else
             return false;
+    }
+
+    public void show(final String result) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(result);
+            }
+        });
+    }
+
+    public int check (Vector<my_beacon> p, my_beacon q){
+        int index = -2;
+        if (!p.isEmpty()) {
+            //Log.d(TAG, "check");
+            for (int i = 0; i < p.size(); i++) {
+                if (p.get(i).beacon_id.equals(q.beacon_id) ) {
+                    index = i;
+                    break;
+                }
+                index = -1;
+            }
+        }
+
+        return index;
     }
 }
