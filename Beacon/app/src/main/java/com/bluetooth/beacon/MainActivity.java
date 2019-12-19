@@ -177,7 +177,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
                     /*Log.d(TAG, "I see a beacon transmitting namespace id: "+namespaceId+
                         " and instance id: "+instanceId+
                         " approximately "+beacon.getDistance()+" meters away.");*/
-                    Log.d(TAG, "namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
+                    //Log.d(TAG, "namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
                     show("namespaceId: " + namespaceId + " instanceId: " + instanceId + " RSSI: " + rssi);
                     //将设备加入列表数据中
                     if (!beaconList.contains(beacon)) {
@@ -336,7 +336,7 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
 
         Vector<my_beacon> differ_p = p0;
         for(int i=1;i<differ_p.size();i++){
-            //与p1位置的所有beacond的rssi作差值。若某beacon在p1未出现，则认为其在p1的rssi为0
+            //与p1位置的所有beacond的rssi作差值。若某beacon在p1未出现，则认为其在p1的rssi为-1000
 
             //int index = p1.indexOf(differ_p.get(i));//!!!!!!!!!!!
 
@@ -345,6 +345,8 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
             //Log.d(TAG, i + String.valueOf(index));
             if(index >= 0){
                 differ_p.get(i).rssi = differ_p.get(i).rssi - p1.get(index).rssi;
+            }else{
+                differ_p.get(i).rssi = -1000;
             }
         }
         //计算结束，返回differ-p
@@ -418,13 +420,19 @@ public class MainActivity extends Activity implements BeaconConsumer,RangeNotifi
         //对于区域内每一个beacon
         for(int i=0;i<size;i++){
             //每个路径对应的差值
-            int index1 = differ_p1.indexOf(r.beacon_set.get(i));
-            int index2 = differ_p2.indexOf(r.beacon_set.get(i));
-            int index3 = differ_p3.indexOf(r.beacon_set.get(i));
+            int index1 = check(differ_p1,r.beacon_set.get(i));
+            int index2 = check(differ_p2,r.beacon_set.get(i));
+            int index3 = check(differ_p3,r.beacon_set.get(i));
 
             //该beacon的判定量
-            X[i] = (sign(differ_p1.get(index1).rssi) ^ sign(differ_p2.get(index2).rssi))
-                    |  (sign(differ_p3.get(index3).rssi) ^ sign(differ_p2.get(index2).rssi));
+
+            boolean A = (sign(differ_p1.get(index1).rssi) ^ sign(differ_p2.get(index2).rssi));
+            boolean B = (sign(differ_p3.get(index3).rssi) ^ sign(differ_p2.get(index2).rssi));
+            X[i] = A | B;
+
+            /*X[i] = (sign(differ_p1.get(index1).rssi) ^ sign(differ_p2.get(index2).rssi))
+                    |  (sign(differ_p3.get(index3).rssi) ^ sign(differ_p2.get(index2).rssi));*/
+
             Log.d(TAG, i + " is " + sign(differ_p1.get(index1).rssi));
         }
 
