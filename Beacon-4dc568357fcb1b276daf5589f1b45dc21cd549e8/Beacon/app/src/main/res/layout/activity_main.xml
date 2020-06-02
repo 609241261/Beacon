@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.bluetooth.beacon.MainActivity">
+
+    <Button
+        android:id="@+id/scan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="扫描设备"/>
+    <Switch
+        android:id="@+id/GPS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textOff="GPS关闭中"
+        android:textOn="GPS开启中"
+        android:text="GPS"/>
+    <Switch
+        android:id="@+id/wifi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textOff="WiFi关闭中"
+        android:textOn="WiFi开启中"
+        android:text="WiFi"/>
+    <Switch
+        android:id="@+id/usb"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textOff="USB关闭中"
+        android:textOn="USB开启中"
+        android:text="USB"/>
+    <Switch
+        android:id="@+id/Microphone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textOff="麦克风关闭中"
+        android:textOn="麦克风开启中"
+        android:text="麦克风"/>
+
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </ListView>
+
+
+
+</LinearLayout>
